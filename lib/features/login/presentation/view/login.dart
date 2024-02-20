@@ -5,9 +5,11 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:test_app/cores/methods/toast.dart';
 import 'package:test_app/cores/utils/color_degree.dart';
 import 'package:test_app/cores/utils/fonts.dart';
+import 'package:test_app/features/login/presentation/view/widgets/custom_top_clipper.dart';
 import 'package:test_app/features/login/presentation/view_model/login_cubit/login_cubit.dart';
 
 import '../../../../cores/methods/google_sign_out.dart';
+import '../../../home_screen/presentation/view/home_screen.dart';
 import '../view_model/login_cubit/login_state.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -25,15 +27,7 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    );
-    _animation = Tween<Offset>(
-      begin: const Offset(0.0, -.5),
-      end: const Offset(0.0, 0),
-    ).animate(_animationController);
-    _animationController.forward();
+    startAnimation();
   }
 
   @override
@@ -51,6 +45,11 @@ class _LoginScreenState extends State<LoginScreen>
           showToast(
               msg: 'Login Success',
               toastMessageType: ToastMessageType.successMessage);
+
+          Navigator.push(context, PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) {
+            return const HomeScreen();
+          }));
         } else if (state is FailureLoginState) {
           showToast(
               msg: state.message,
@@ -63,7 +62,7 @@ class _LoginScreenState extends State<LoginScreen>
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               SizedBox(
-                height: MediaQuery.sizeOf(context).height * .3,
+                height: MediaQuery.sizeOf(context).height * .34,
                 child: Stack(
                   children: [
                     ClipPath(
@@ -81,14 +80,14 @@ class _LoginScreenState extends State<LoginScreen>
                       child: SvgPicture.asset(
                         'assets/images/through_the_desert.svg',
                         fit: BoxFit.cover,
+                        width: MediaQuery.sizeOf(context).width * .5,
+                        height: MediaQuery.sizeOf(context).height * .3,
                       ),
                     )
                   ],
                 ),
               ),
-              SizedBox(
-                height: MediaQuery.sizeOf(context).height * .05,
-              ),
+              const Spacer(),
               AnimatedBuilder(
                   animation: _animationController,
                   builder: (context, child) {
@@ -138,7 +137,7 @@ class _LoginScreenState extends State<LoginScreen>
                             padding: const EdgeInsets.only(right: 8.0),
                             child: Text(
                               'Sign in with google',
-                              style: AppFonts.textStyle18,
+                              style: AppFonts.abelTextStyle18,
                             ),
                           ),
                         ],
@@ -148,12 +147,10 @@ class _LoginScreenState extends State<LoginScreen>
               if (state is LoadingLoginState)
                 Container(
                   width: MediaQuery.sizeOf(context).width * .7,
-                  margin: const EdgeInsets.only(top: 10),
-                  child: const LinearProgressIndicator(
-                    color: Colors.indigo,
-                  ),
                 ),
-              const Spacer(),
+              const Spacer(
+                flex: 2,
+              ),
               Transform.rotate(
                 angle: 2 * 1.57079633,
                 child: ClipPath(
@@ -166,7 +163,7 @@ class _LoginScreenState extends State<LoginScreen>
                     height: MediaQuery.sizeOf(context).height * .25,
                     child: Center(
                       child: Padding(
-                        padding: const EdgeInsets.only(bottom: 20),
+                        padding: const EdgeInsets.only(bottom: 40),
                         child: Transform.rotate(
                           angle: 2 * 1.57079633,
                           child: Column(
@@ -180,12 +177,22 @@ class _LoginScreenState extends State<LoginScreen>
                               const SizedBox(
                                 height: 10,
                               ),
-                              Text(
-                                'ReadMe Books',
-                                style: AppFonts.textStyle18.copyWith(
-                                  color: Colors.white.withLightness(.95),
-                                ),
-                              )
+                              AnimatedBuilder(
+                                  animation: _animationController,
+                                  builder: (context, child) {
+                                    return AnimatedOpacity(
+                                      opacity: _animationController.value,
+                                      duration: const Duration(seconds: 1),
+                                      child: Text(
+                                        'ReadMe Books',
+                                        style:
+                                            AppFonts.abelTextStyle18.copyWith(
+                                          color:
+                                              Colors.white.withLightness(.95),
+                                        ),
+                                      ),
+                                    );
+                                  })
                             ],
                           ),
                         ),
@@ -200,56 +207,16 @@ class _LoginScreenState extends State<LoginScreen>
       }),
     );
   }
-}
 
-class CustomTopClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    var path = Path();
-    path.lineTo(0.0, size.height);
-    var firstControlPoint = Offset(55, size.height / 1.4);
-    var firstEndPoint = Offset(size.width / 1.7, size.height / 1.3);
-    path.quadraticBezierTo(firstControlPoint.dx, firstControlPoint.dy,
-        firstEndPoint.dx, firstEndPoint.dy);
-    var secondControlPoint = Offset(size.width - (35), size.height - 95);
-    var secondEndPoint = Offset(size.width, size.height / 2.4);
-    path.quadraticBezierTo(secondControlPoint.dx, secondControlPoint.dy,
-        secondEndPoint.dx, secondEndPoint.dy);
-    path.lineTo(size.width, size.height - 40);
-    path.lineTo(size.width, 0.0);
-    path.close();
-    return path;
-  }
-
-  @override
-  bool shouldReclip(CustomClipper oldClipper) {
-    return true;
-  }
-}
-
-class CustomBottomClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    var path = Path();
-    path.lineTo(0.0, size.height);
-    var firstControlPoint =
-        Offset(size.width - 55, size.height - (size.height / 1.4));
-    var firstEndPoint = Offset(
-        size.width - (size.width / 1.7), size.height - (size.height / 1.3));
-    path.quadraticBezierTo(firstControlPoint.dx, firstControlPoint.dy,
-        firstEndPoint.dx, firstEndPoint.dy);
-    var secondControlPoint = Offset(35, size.height - 95);
-    var secondEndPoint = Offset(0.0, size.height / 2.4);
-    path.quadraticBezierTo(secondControlPoint.dx, secondControlPoint.dy,
-        secondEndPoint.dx, secondEndPoint.dy);
-    path.lineTo(0.0, size.height - 40);
-    path.lineTo(0.0, 0.0);
-    path.close();
-    return path;
-  }
-
-  @override
-  bool shouldReclip(CustomClipper oldClipper) {
-    return false;
+  void startAnimation() {
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    );
+    _animation = Tween<Offset>(
+      begin: const Offset(0.0, -.5),
+      end: const Offset(0.0, 0),
+    ).animate(_animationController);
+    _animationController.forward();
   }
 }

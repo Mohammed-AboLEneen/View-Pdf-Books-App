@@ -17,7 +17,7 @@ class LoginCubit extends Cubit<LoginStates> {
       await FirebaseAuth.instance.signInWithCredential(credential);
       emit(SuccessLoginState());
     } catch (e) {
-      emit(FailureLoginState(e.toString()));
+      emit(FailureLoginState('There is something wrong, try Again'));
     }
   }
 }
