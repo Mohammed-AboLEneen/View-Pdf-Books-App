@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:test_app/utils/color_degree.dart';
+import 'package:test_app/cores/utils/color_degree.dart';
 
 Future<void> showComment(context,
     {required String title, required TextEditingController controller}) async {
