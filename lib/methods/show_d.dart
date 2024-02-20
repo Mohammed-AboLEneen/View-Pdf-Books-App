@@ -13,6 +13,8 @@ Future<void> showComment(context,
           backgroundColor: Colors.white.withLightness(.9),
           title: Text(
             title,
+            maxLines: 5,
+            overflow: TextOverflow.ellipsis,
             style: GoogleFonts.aBeeZee(),
           ),
           content: TextField(
