@@ -16,7 +16,7 @@ void showToast(
   } else if (toastMessageType == ToastMessageType.failureMessage) {
     bgColor = Colors.red;
   } else {
-    bgColor = Colors.yellow.withLightness(.5);
+    bgColor = Colors.teal;
   }
 
   Color txColor = textColor ?? Colors.white;

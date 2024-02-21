@@ -9,6 +9,7 @@ class BookModel {
   BookModel.fromJson(Map<String, dynamic> json) {
     title = json['title'];
     author = json['author'];
-    author = json['url'];
+    imageUrl = json['imageUrl'];
+    bookUrl = json['bookUrl'];
   }
 }

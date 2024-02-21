@@ -13,13 +13,22 @@ class BooksListViewItem extends StatelessWidget {
     return InkWell(
       onTap: () {},
       child: Container(
-        height: MediaQuery.sizeOf(context).height * .15,
+        height: MediaQuery.sizeOf(context).height * .16,
         width: MediaQuery.sizeOf(context).width,
         margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         child: Row(
           children: [
-            Image.network(model.imageUrl ??
-                'https://img1.od-cdn.com/ImageType-400/6852-1/06C/4AD/1E/%7B06C4AD1E-9D1C-42B5-986D-BD6806FEEE5A%7DImg400.jpg'),
+            AspectRatio(
+              aspectRatio: 100 / 120,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.network(
+                  model.imageUrl ??
+                      'https://img1.od-cdn.com/ImageType-400/6852-1/06C/4AD/1E/%7B06C4AD1E-9D1C-42B5-986D-BD6806FEEE5A%7DImg400.jpg',
+                  fit: BoxFit.fill,
+                ),
+              ),
+            ),
             const SizedBox(
               width: 10,
             ),
@@ -42,6 +51,12 @@ class BooksListViewItem extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
+                  const Spacer(),
+                  Text(
+                    'Click Here To Read',
+                    style:
+                        AppFonts.abelTextStyle18.copyWith(color: Colors.blue),
+                  )
                 ],
               ),
             )

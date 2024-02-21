@@ -23,7 +23,11 @@ class HomeScreenCubit extends Cubit<HomeScreenStates> {
         booksList.add(BookModel.fromJson(element.data()));
       }
 
-      emit(SuccessGetHomeScreenBooks());
+      if (booksList.isNotEmpty) {
+        emit(SuccessGetHomeScreenBooks());
+      } else {
+        emit(FailureGetHomeScreenBooks('No Data Found'));
+      }
     } catch (e) {
       emit(FailureGetHomeScreenBooks('There is something wrong, try Again'));
     }
