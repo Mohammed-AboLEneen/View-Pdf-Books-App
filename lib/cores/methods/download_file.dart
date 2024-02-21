@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
-Future<File?> downloadFile(
+Future<File> downloadFile(
     {required String url, required String filename}) async {
   final Directory directory = await getApplicationDocumentsDirectory();
   final String filePath = '${directory.path}/$filename';
@@ -18,10 +18,11 @@ Future<File?> downloadFile(
       final List<int> bytes =
           await consolidateHttpClientResponseBytes(response);
       await file.writeAsBytes(bytes);
-      return file;
     } else {
       throw Exception('Failed to download file');
     }
+  } else {
+    print("file path exist : ${file.path}");
   }
-  return null;
+  return file;
 }

@@ -41,7 +41,11 @@ class HomeScreen extends StatelessWidget {
             color: Colors.blue,
           )));
         } else {
-          return const FailureWidget();
+          return FailureWidget(
+            action: () {
+              homeScreenCubit.getBooksData();
+            },
+          );
         }
       }),
     );

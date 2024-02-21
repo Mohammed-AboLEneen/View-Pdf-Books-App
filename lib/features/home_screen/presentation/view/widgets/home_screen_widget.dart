@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../../cores/utils/fonts.dart';
 import '../../../../../cores/widgets/custom_textfield_rounded_border.dart';
 import '../../../data/models/book_model.dart';
+import '../book_viewer.dart';
 import 'books_listView_item.dart';
 
 class HomeScreenWidget extends StatelessWidget {
