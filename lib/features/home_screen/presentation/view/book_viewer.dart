@@ -11,6 +11,7 @@ import 'package:test_app/features/home_screen/presentation/view_model/book_pdf_v
 import 'package:test_app/features/home_screen/presentation/view_model/book_pdf_viewer_cubit/bool_pdf_viewer_states.dart';
 
 import '../../../../cores/methods/show_d.dart';
+import '../../data/models/heighlight_model.dart';
 import 'book_markers_view.dart';
 
 /// Represents Homepage for Navigation
@@ -27,8 +28,16 @@ class _BookPdfViewer extends State<BookPdfViewer> {
   final GlobalKey<SfPdfViewerState> _pdfViewerKey = GlobalKey();
   final TextEditingController controller = TextEditingController();
   String selectedText = '';
-  List<PdfTextLine>? textLines;
   List<PdfBookmark> markers = [];
+  int changableAnnotationIndex = 0;
+  bool isEdit = false;
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    _pdfViewerController.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,13 +99,8 @@ class _BookPdfViewer extends State<BookPdfViewer> {
                   body: SfPdfViewer.file(
                     bookPdfViewerCubit.file!,
                     key: _pdfViewerKey,
+
                     pageLayoutMode: PdfPageLayoutMode.single,
-                    onAnnotationAdded: (a) async {
-                      a.name = selectedText;
-                      List<int> s = await _pdfViewerController.saveDocument();
-                      bookPdfViewerCubit.file!.writeAsBytes(s);
-                      print('saved');
-                    },
                     enableTextSelection: true,
 // Enable text selection
 
@@ -108,12 +112,47 @@ class _BookPdfViewer extends State<BookPdfViewer> {
                       }
                     },
                     onTextSelectionChanged: (a) async {
-                      selectedText = a.selectedText!;
-                      textLines =
-                          _pdfViewerKey.currentState?.getSelectedTextLines();
+                      selectedText =
+                          selectedText.isNotEmpty && a.selectedText == null
+                              ? selectedText
+                              : a.selectedText ?? '';
                     },
+
                     controller: _pdfViewerController,
+                    onAnnotationAdded: (a) async {
+                      bookPdfViewerCubit.document = PdfDocument(
+                        inputBytes: bookPdfViewerCubit.file!.readAsBytesSync(),
+                      );
+
+                      // print('selected text when add  : ${selectedText}');
+                      if (selectedText.isNotEmpty && isEdit == false) {
+                        a.name = selectedText;
+                      }
+
+                      // print('number of annotiations in current page : ${}');
+                      a.author = isEdit
+                          ? changableAnnotationIndex.toString()
+                          : '${bookPdfViewerCubit.document.pages[_pdfViewerController.pageNumber - 1].annotations.count}';
+
+                      List<int> bytes =
+                          await _pdfViewerController.saveDocument();
+//Saves the bytes to the file system
+
+                      await bookPdfViewerCubit.file!.writeAsBytes(bytes);
+                      bookPdfViewerCubit.document = PdfDocument(
+                        inputBytes: bookPdfViewerCubit.file!.readAsBytesSync(),
+                      );
+                    },
+
                     onAnnotationSelected: (a) async {
+                      // read the new annotations.
+                      bookPdfViewerCubit.document = PdfDocument(
+                        inputBytes: bookPdfViewerCubit.file!.readAsBytesSync(),
+                      );
+                      List<HeightLightModel> heightLightModels = [];
+
+                      heightLightModels.sort((a, b) => int.parse(a.author ?? '')
+                          .compareTo(int.parse(b.author ?? '')));
                       controller.text = a.subject ?? '';
 
                       await showComment(context,
@@ -124,21 +163,33 @@ class _BookPdfViewer extends State<BookPdfViewer> {
                         return;
                       }
 
-                      if (textLines != null && textLines!.isNotEmpty) {
-// Create the highlight annotation.
-                        final HighlightAnnotation highlightAnnotation =
-                            HighlightAnnotation(
-                          textBoundsCollection: textLines!,
-                        );
-                        highlightAnnotation.name = a.name;
-                        highlightAnnotation.subject = controller.text;
-                        _pdfViewerController.removeAnnotation(a);
-// Add the annotation to the PDF document.
-                        _pdfViewerController.addAnnotation(highlightAnnotation);
-                      }
-// we save the document after editing the annotation
-                      List<int> s = await _pdfViewerController.saveDocument();
-                      bookPdfViewerCubit.file!.writeAsBytes(s);
+                      HighlightAnnotation annotation =
+                          HighlightAnnotation(textBoundsCollection: [
+                        PdfTextLine(
+                            heightLightModels[int.parse(a.author ?? '')].bounds,
+                            a.name ?? '000',
+                            _pdfViewerController.pageNumber)
+                      ]);
+                      annotation.subject = controller.text;
+                      annotation.author = a.author;
+                      annotation.name =
+                          heightLightModels[int.parse(a.author ?? '')].name;
+                      changableAnnotationIndex = int.parse(a.author ?? '10');
+
+                      isEdit = true;
+                      _pdfViewerController.removeAnnotation(a);
+                      _pdfViewerController.addAnnotation(annotation);
+                      isEdit = false;
+
+                      List<int> bytes =
+                          await _pdfViewerController.saveDocument();
+//Saves the bytes to the file system
+
+                      await bookPdfViewerCubit.file!.writeAsBytes(bytes);
+
+                      bookPdfViewerCubit.document = PdfDocument(
+                        inputBytes: bookPdfViewerCubit.file!.readAsBytesSync(),
+                      );
                     },
                   ),
                 );
@@ -158,7 +209,7 @@ class _BookPdfViewer extends State<BookPdfViewer> {
                         color: Colors.blue,
                       ),
                       const SizedBox(
-                        height: 5,
+                        height: 10,
                       ),
                       Text(
                         'Wait to download the book...',
