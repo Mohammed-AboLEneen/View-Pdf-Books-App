@@ -28,8 +28,11 @@ class _BookPdfViewer extends State<BookPdfViewer> {
   final GlobalKey<SfPdfViewerState> _pdfViewerKey = GlobalKey();
   final TextEditingController controller = TextEditingController();
   String selectedText = '';
+  List<PdfTextLine>? textLines;
   List<PdfBookmark> markers = [];
+  int pageNumber = 0;
   int changableAnnotationIndex = 0;
+  int heightLightscount = 0;
   bool isEdit = false;
 
   @override
@@ -103,13 +106,14 @@ class _BookPdfViewer extends State<BookPdfViewer> {
                     pageLayoutMode: PdfPageLayoutMode.single,
                     enableTextSelection: true,
 // Enable text selection
-
                     onDocumentLoaded: (PdfDocumentLoadedDetails details) {
                       for (int i = 0;
                           i < details.document.bookmarks.count;
                           i++) {
                         markers.add(details.document.bookmarks[i]);
                       }
+
+                      _pdfViewerController.jumpToPage(pageNumber);
                     },
                     onTextSelectionChanged: (a) async {
                       selectedText =
@@ -117,7 +121,26 @@ class _BookPdfViewer extends State<BookPdfViewer> {
                               ? selectedText
                               : a.selectedText ?? '';
                     },
-
+                    onPageChanged: (a) {
+                      heightLightscount = 0;
+                      for (int i = 0;
+                          i <
+                              bookPdfViewerCubit
+                                  .document
+                                  .pages[_pdfViewerController.pageNumber - 1]
+                                  .annotations
+                                  .count;
+                          i++) {
+                        if (bookPdfViewerCubit
+                            .document
+                            .pages[_pdfViewerController.pageNumber - 1]
+                            .annotations[i]
+                            .author
+                            .isNotEmpty) {
+                          heightLightscount++;
+                        }
+                      }
+                    },
                     controller: _pdfViewerController,
                     onAnnotationAdded: (a) async {
                       bookPdfViewerCubit.document = PdfDocument(
@@ -132,7 +155,8 @@ class _BookPdfViewer extends State<BookPdfViewer> {
                       // print('number of annotiations in current page : ${}');
                       a.author = isEdit
                           ? changableAnnotationIndex.toString()
-                          : '${bookPdfViewerCubit.document.pages[_pdfViewerController.pageNumber - 1].annotations.count}';
+                          : '$heightLightscount';
+                      heightLightscount++;
 
                       List<int> bytes =
                           await _pdfViewerController.saveDocument();
@@ -142,6 +166,8 @@ class _BookPdfViewer extends State<BookPdfViewer> {
                       bookPdfViewerCubit.document = PdfDocument(
                         inputBytes: bookPdfViewerCubit.file!.readAsBytesSync(),
                       );
+
+                      print('saved');
                     },
 
                     onAnnotationSelected: (a) async {
@@ -151,10 +177,58 @@ class _BookPdfViewer extends State<BookPdfViewer> {
                       );
                       List<HeightLightModel> heightLightModels = [];
 
+                      for (int i = 0;
+                          i <
+                              bookPdfViewerCubit
+                                  .document
+                                  .pages[_pdfViewerController.pageNumber - 1]
+                                  .annotations
+                                  .count;
+                          i++) {
+                        if (bookPdfViewerCubit
+                            .document
+                            .pages[_pdfViewerController.pageNumber - 1]
+                            .annotations[i]
+                            .author
+                            .isNotEmpty) {
+                          heightLightModels.add(HeightLightModel(
+                              name: bookPdfViewerCubit
+                                  .document
+                                  .pages[_pdfViewerController.pageNumber - 1]
+                                  .annotations[i]
+                                  .text,
+                              bounds: bookPdfViewerCubit
+                                  .document
+                                  .pages[_pdfViewerController.pageNumber - 1]
+                                  .annotations[i]
+                                  .bounds,
+                              subject: bookPdfViewerCubit
+                                  .document
+                                  .pages[_pdfViewerController.pageNumber - 1]
+                                  .annotations[i]
+                                  .subject,
+                              author: bookPdfViewerCubit
+                                  .document
+                                  .pages[_pdfViewerController.pageNumber - 1]
+                                  .annotations[i]
+                                  .author));
+                        }
+
+                        print(bookPdfViewerCubit
+                            .document
+                            .pages[_pdfViewerController.pageNumber - 1]
+                            .annotations[i]
+                            .author);
+                      }
+
                       heightLightModels.sort((a, b) => int.parse(a.author ?? '')
                           .compareTo(int.parse(b.author ?? '')));
                       controller.text = a.subject ?? '';
 
+                      for (int i = 0; i < heightLightModels.length; i++) {
+                        print(
+                            '${heightLightModels[i].name}: ${heightLightModels[i].author} + + + }');
+                      }
                       await showComment(context,
                           title: a.name ?? '', controller: controller);
 
@@ -162,6 +236,9 @@ class _BookPdfViewer extends State<BookPdfViewer> {
                           (a.subject == null && controller.text.isEmpty)) {
                         return;
                       }
+
+                      print(
+                          'selected annotation : ${a.author} and ann count : ${bookPdfViewerCubit.document.pages[_pdfViewerController.pageNumber - 1].annotations.count}');
 
                       HighlightAnnotation annotation =
                           HighlightAnnotation(textBoundsCollection: [
@@ -176,8 +253,22 @@ class _BookPdfViewer extends State<BookPdfViewer> {
                           heightLightModels[int.parse(a.author ?? '')].name;
                       changableAnnotationIndex = int.parse(a.author ?? '10');
 
+                      print(
+                          'changableAnnotationIndex : $changableAnnotationIndex');
+                      for (int i = 0;
+                          i <
+                              bookPdfViewerCubit
+                                  .document
+                                  .pages[_pdfViewerController.pageNumber - 1]
+                                  .annotations
+                                  .count;
+                          i++) {
+                        print(
+                            'before ${bookPdfViewerCubit.document.pages[_pdfViewerController.pageNumber - 1].annotations[i].text}: ${bookPdfViewerCubit.document.pages[_pdfViewerController.pageNumber - 1].annotations[i].author}');
+                      }
                       isEdit = true;
                       _pdfViewerController.removeAnnotation(a);
+                      heightLightscount--;
                       _pdfViewerController.addAnnotation(annotation);
                       isEdit = false;
 
@@ -187,9 +278,24 @@ class _BookPdfViewer extends State<BookPdfViewer> {
 
                       await bookPdfViewerCubit.file!.writeAsBytes(bytes);
 
+                      for (int i = 0;
+                          i <
+                              bookPdfViewerCubit
+                                  .document
+                                  .pages[_pdfViewerController.pageNumber - 1]
+                                  .annotations
+                                  .count;
+                          i++) {
+                        print(
+                            'after ${bookPdfViewerCubit.document.pages[_pdfViewerController.pageNumber - 1].annotations[i].text}: ${bookPdfViewerCubit.document.pages[_pdfViewerController.pageNumber - 1].annotations[i].author}');
+                      }
+
                       bookPdfViewerCubit.document = PdfDocument(
                         inputBytes: bookPdfViewerCubit.file!.readAsBytesSync(),
                       );
+                      print(
+                          'we added in  : ${annotation.author}, ${annotation.name}, ${annotation.subject}');
+                      print('saaaaaaved');
                     },
                   ),
                 );

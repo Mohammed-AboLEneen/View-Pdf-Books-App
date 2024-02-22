@@ -18,6 +18,6 @@ void main() async {
       useMaterial3: false,
     ),
     debugShowCheckedModeBanner: false,
-    home: const HomeScreen(),
+    home: const LoginScreen(),
   ));
 }

@@ -6,7 +6,7 @@ import 'package:path_provider/path_provider.dart';
 Future<File> downloadFile(
     {required String url, required String filename}) async {
   final Directory directory = await getApplicationDocumentsDirectory();
-  final String filePath = '${directory.path}/$filename 1ag';
+  final String filePath = '${directory.path}/$filename 1ag00';
   final File file = File(filePath);
 
   if (!await file.exists()) {

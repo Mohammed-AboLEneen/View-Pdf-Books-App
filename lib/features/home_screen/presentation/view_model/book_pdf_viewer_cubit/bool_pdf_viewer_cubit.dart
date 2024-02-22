@@ -16,6 +16,7 @@ class BookPdfViewerCubit extends Cubit<BookPdfViewerStates> {
   File? file;
   late PdfDocument document;
   String fileName = '';
+  int annotationsCount = 0;
 
   Future<void> downloadPdf({required BookModel bookModel}) async {
     emit(BookPdfViewerLoadingState());
@@ -27,6 +28,7 @@ class BookPdfViewerCubit extends Cubit<BookPdfViewerStates> {
 
       fileName = '${directory.path}/${bookModel.title}';
       document = PdfDocument(inputBytes: file!.readAsBytesSync());
+      annotationsCount = document.pages[0].annotations.count;
       emit(BookPdfViewerSuccessState());
     } catch (e) {
       emit(BookPdfViewerFailureState(e.toString()));
