@@ -14,7 +14,6 @@ import '../../../../cores/methods/show_d.dart';
 import '../../data/models/heighlight_model.dart';
 import 'book_markers_view.dart';
 
-/// Represents Homepage for Navigation
 class BookPdfViewer extends StatefulWidget {
   final BookModel bookModel;
   const BookPdfViewer({Key? key, required, required this.bookModel})
@@ -28,12 +27,14 @@ class _BookPdfViewer extends State<BookPdfViewer> {
   final GlobalKey<SfPdfViewerState> _pdfViewerKey = GlobalKey();
   final TextEditingController controller = TextEditingController();
   String selectedText = '';
-
   List<PdfBookmark> markers = [];
-
+  //get the index of selected annotation if i add new one with same index(edit i mean).
   int changableAnnotationIndex = 0;
+  //get the current height Lights count to give index for new annotations.
   int heightLightscount = 0;
+  // if true i will edit the annotation (the index will be changableAnnotationIndex) else i will add new one (the index will be heightLightscount).
   bool isEdit = false;
+
   @override
   void dispose() {
     // TODO: implement dispose
@@ -119,24 +120,8 @@ class _BookPdfViewer extends State<BookPdfViewer> {
                               : a.selectedText ?? '';
                     },
                     onPageChanged: (a) {
-                      heightLightscount = 0;
-                      for (int i = 0;
-                          i <
-                              bookPdfViewerCubit
-                                  .document
-                                  .pages[_pdfViewerController.pageNumber - 1]
-                                  .annotations
-                                  .count;
-                          i++) {
-                        if (bookPdfViewerCubit
-                            .document
-                            .pages[_pdfViewerController.pageNumber - 1]
-                            .annotations[i]
-                            .author
-                            .isNotEmpty) {
-                          heightLightscount++;
-                        }
-                      }
+                      getHeightLightAnnotationsCount(
+                          bookPdfViewerCubit.document);
                     },
                     controller: _pdfViewerController,
                     onAnnotationAdded: (a) async {
@@ -144,12 +129,11 @@ class _BookPdfViewer extends State<BookPdfViewer> {
                         inputBytes: bookPdfViewerCubit.file!.readAsBytesSync(),
                       );
 
-                      // print('selected text when add  : ${selectedText}');
+
                       if (selectedText.isNotEmpty && isEdit == false) {
                         a.name = selectedText;
                       }
 
-                      // print('number of annotiations in current page : ${}');
                       a.author = isEdit
                           ? changableAnnotationIndex.toString()
                           : '$heightLightscount';
@@ -157,24 +141,20 @@ class _BookPdfViewer extends State<BookPdfViewer> {
 
                       List<int> bytes =
                           await _pdfViewerController.saveDocument();
-//Saves the bytes to the file system
 
                       await bookPdfViewerCubit.file!.writeAsBytes(bytes);
                       bookPdfViewerCubit.document = PdfDocument(
                         inputBytes: bookPdfViewerCubit.file!.readAsBytesSync(),
                       );
-
-                      print('saved');
                     },
 
                     onAnnotationSelected: (a) async {
                       // read the new annotations.
-                      bookPdfViewerCubit.document = PdfDocument(
-                        inputBytes: bookPdfViewerCubit.file!.readAsBytesSync(),
-                      );
-                      List<HeightLightModel> heightLightModels = [];
-
-
+                      List<HeightLightModel> heightLightModels;
+                      // get the height light annotations from document and sort them based on author(index)
+                      heightLightModels =
+                          bookPdfViewerCubit.getOrderedHeightLightAnnotations(
+                              _pdfViewerController);
 
                       heightLightModels.sort((a, b) => int.parse(a.author ?? '')
                           .compareTo(int.parse(b.author ?? '')));
@@ -188,32 +168,13 @@ class _BookPdfViewer extends State<BookPdfViewer> {
                         return;
                       }
 
-                      HighlightAnnotation annotation =
-                          HighlightAnnotation(textBoundsCollection: [
-                        PdfTextLine(
-                            heightLightModels[int.parse(a.author ?? '')].bounds,
-                            a.name ?? '000',
-                            _pdfViewerController.pageNumber)
-                      ]);
-                      annotation.subject = controller.text;
-                      annotation.author = a.author;
-                      annotation.name =
-                          heightLightModels[int.parse(a.author ?? '')].name;
-                      changableAnnotationIndex = int.parse(a.author ?? '10');
-
-                      isEdit = true;
-                      _pdfViewerController.removeAnnotation(a);
-                      heightLightscount--;
-                      _pdfViewerController.addAnnotation(annotation);
-                      isEdit = false;
+                      addNewAnnotation(heightLightModels, a);
 
                       List<int> bytes =
                           await _pdfViewerController.saveDocument();
 //Saves the bytes to the file system
 
                       await bookPdfViewerCubit.file!.writeAsBytes(bytes);
-
-
                       bookPdfViewerCubit.document = PdfDocument(
                         inputBytes: bookPdfViewerCubit.file!.readAsBytesSync(),
                       );
@@ -247,5 +208,37 @@ class _BookPdfViewer extends State<BookPdfViewer> {
                 ));
               }
             }));
+  }
+
+  void addNewAnnotation(
+      List<HeightLightModel> heightLightModels, Annotation a) {
+    HighlightAnnotation annotation = HighlightAnnotation(textBoundsCollection: [
+      PdfTextLine(heightLightModels[int.parse(a.author ?? '')].bounds,
+          a.name ?? '000', _pdfViewerController.pageNumber)
+    ]);
+    annotation.subject = controller.text;
+    annotation.author = a.author;
+    annotation.name = heightLightModels[int.parse(a.author ?? '')].name;
+    changableAnnotationIndex = int.parse(a.author ?? '10');
+
+    isEdit = true;
+    _pdfViewerController.removeAnnotation(a);
+    heightLightscount--;
+    _pdfViewerController.addAnnotation(annotation);
+    isEdit = false;
+  }
+
+  void getHeightLightAnnotationsCount(PdfDocument document) {
+    heightLightscount = 0;
+    for (int i = 0;
+        i <
+            document
+                .pages[_pdfViewerController.pageNumber - 1].annotations.count;
+        i++) {
+      if (document.pages[_pdfViewerController.pageNumber - 1].annotations[i]
+          .author.isNotEmpty) {
+        heightLightscount++;
+      }
+    }
   }
 }
