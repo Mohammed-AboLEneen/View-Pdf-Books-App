@@ -27,7 +27,7 @@ Before you begin, ensure you have:
 1. **Clone the repository:**
 
    ```bash
-   git clone https://your-github-repository-url](https://github.com/Mohammed-AboLEneen/View-Pdf-Books-App/)https://github.com/Mohammed-AboLEneen/View-Pdf-Books-App/.git
+   git clone https://github.com/Mohammed-AboLEneen/View-Pdf-Books-App/.git
 
 2. **Configure Firebase:**
    * Follow Firebase documentation to integrate it into your Flutter project: https://firebase.google.com/docs/flutter/setup.
