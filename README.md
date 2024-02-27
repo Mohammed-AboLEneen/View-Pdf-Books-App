@@ -8,7 +8,7 @@ This Flutter app empowers users with an engaging and interactive reading experie
 * **Extensive Book Library:** Explore and browse a diverse collection of books across various genres.
 * **Offline Reading:** Download books directly within the app for reading enjoyment anywhere, anytime.
 * **Enhanced Comprehension:** Highlight key passages and add personalized comments to enrich learning.
-* **Persistent Annotation Storage:** Save highlights and comments locally or to a remote storage service (e.g., Cloud Firestore) for consistency across app sessions.
+* **Persistent Annotation Storage:** Save highlights and comments locally.
 
 ## Key Technologies
 
